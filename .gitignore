@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.vs/
+.idea/
+*.DotSettings.user
+
+# Node.js
+node_modules/
+.next/
+out/
+.env*.local
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/
+
+# Reports
+reports/
+
+# Docker
+docker/data/
