@@ -23,6 +23,12 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
+# Install fonts for SkiaSharp captcha rendering
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libfontconfig1 \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
