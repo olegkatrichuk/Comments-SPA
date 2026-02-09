@@ -100,11 +100,13 @@ public sealed class CaptchaService : ICaptchaService
         }
 
         // Draw characters with rotation
+        using var typeface = SKTypeface.FromFamilyName("DejaVu Sans", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+                             ?? SKTypeface.Default;
+        using var font = new SKFont(typeface, 32);
         using var textPaint = new SKPaint
         {
             IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-            TextSize = 32
+            Style = SKPaintStyle.Fill
         };
 
         var charSpacing = (ImageWidth - 20) / text.Length;
@@ -122,7 +124,7 @@ public sealed class CaptchaService : ICaptchaService
 
             canvas.Save();
             canvas.RotateDegrees(rotation, x, y);
-            canvas.DrawText(text[i].ToString(), x, y, textPaint);
+            canvas.DrawText(text[i].ToString(), x, y, font, textPaint);
             canvas.Restore();
         }
 
