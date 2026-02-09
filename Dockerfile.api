@@ -19,8 +19,8 @@ COPY src/ src/
 WORKDIR /src/src/Comments.API
 RUN dotnet publish -c Release -o /app/publish
 
-# Runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+# Runtime image (noble = Ubuntu 24.04, has FreeType with BDF support for SkiaSharp on ARM64)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble AS runtime
 WORKDIR /app
 
 # Install SkiaSharp native dependencies
