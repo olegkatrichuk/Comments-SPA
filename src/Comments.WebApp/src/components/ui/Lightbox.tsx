@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface LightboxProps {
   src: string;
@@ -8,6 +8,11 @@ interface LightboxProps {
   isTextFile?: boolean;
   onClose: () => void;
 }
+
+// Lightbox2-style timings
+const FADE_DURATION = 600;
+const IMAGE_FADE_DURATION = 600;
+const POSITION_FROM_TOP = 50;
 
 export default function Lightbox({
   src,
@@ -19,11 +24,16 @@ export default function Lightbox({
   const [loading, setLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [closing, setClosing] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const [overlayVisible, setOverlayVisible] = useState(false);
+
+  // Fade in overlay on mount
+  useEffect(() => {
+    requestAnimationFrame(() => setOverlayVisible(true));
+  }, []);
 
   const handleClose = useCallback(() => {
     setClosing(true);
-    setTimeout(() => onClose(), 300);
+    setTimeout(() => onClose(), FADE_DURATION);
   }, [onClose]);
 
   const handleKeyDown = useCallback(
@@ -70,52 +80,31 @@ export default function Lightbox({
   };
 
   return (
-    <div
-      ref={overlayRef}
-      className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
-        closing ? "opacity-0" : "opacity-100"
-      }`}
-      style={{ animation: !closing ? "lightbox-fade-in 0.3s ease-out" : undefined }}
-      onClick={handleClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/80" />
-
-      {/* Content container */}
+    <div className="fixed inset-0 z-50" onClick={handleClose}>
+      {/* Overlay - Lightbox2 style fade */}
       <div
-        className={`relative z-10 flex flex-col items-center transition-all duration-300 ${
-          closing ? "scale-95 opacity-0" : ""
-        }`}
-        style={{ animation: !closing ? "lightbox-scale-in 0.3s ease-out" : undefined }}
+        className="absolute inset-0 bg-black transition-opacity"
+        style={{
+          opacity: overlayVisible && !closing ? 0.8 : 0,
+          transitionDuration: `${FADE_DURATION}ms`,
+        }}
+      />
+
+      {/* Content container - positioned from top like Lightbox2 */}
+      <div
+        className="relative z-10 flex flex-col items-center w-full transition-opacity"
+        style={{
+          paddingTop: `${POSITION_FROM_TOP}px`,
+          opacity: overlayVisible && !closing ? 1 : 0,
+          transitionDuration: `${FADE_DURATION}ms`,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors z-20"
-          title="Close (Esc)"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-8 h-8"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-
         {isTextFile ? (
-          <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl max-h-[80vh] overflow-auto">
+          <div className="bg-white rounded shadow-2xl p-6 max-w-2xl max-h-[80vh] overflow-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">
@@ -124,34 +113,60 @@ export default function Lightbox({
             )}
           </div>
         ) : (
-          <>
-            {/* Spinner while image loads */}
+          <div className="flex flex-col items-center">
+            {/* Loading spinner - Lightbox2 style */}
             {loading && (
-              <div className="flex items-center justify-center py-16">
-                <div className="w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="flex items-center justify-center" style={{ minHeight: "200px" }}>
+                <div className="w-10 h-10 border-3 border-white/20 border-t-white rounded-full animate-spin" />
               </div>
             )}
 
-            {/* Image with fade-in */}
-            <img
-              src={src}
-              alt={alt || "Full size image"}
-              className={`max-w-[90vw] max-h-[80vh] object-contain rounded-lg shadow-2xl transition-opacity duration-500 ${
-                imageLoaded ? "opacity-100" : "opacity-0"
-              } ${loading ? "absolute" : ""}`}
-              onLoad={handleImageLoad}
-            />
+            {/* Image container with Lightbox2-style fade */}
+            <div
+              className="relative bg-white p-1 rounded shadow-2xl transition-opacity"
+              style={{
+                opacity: imageLoaded ? 1 : 0,
+                transitionDuration: `${IMAGE_FADE_DURATION}ms`,
+                display: loading ? "none" : "block",
+              }}
+            >
+              <img
+                src={src}
+                alt={alt || "Full size image"}
+                className="block max-w-[90vw] max-h-[75vh] object-contain"
+                style={{
+                  maxHeight: `calc(100vh - ${POSITION_FROM_TOP * 2 + 100}px)`,
+                }}
+                onLoad={handleImageLoad}
+              />
+            </div>
 
-            {/* Caption bar */}
-            {imageLoaded && alt && (
+            {/* Caption and close bar - Lightbox2 style */}
+            {imageLoaded && (
               <div
-                className="mt-3 px-4 py-2 bg-black/50 rounded-md text-white/90 text-sm text-center transition-opacity duration-500"
-                style={{ animation: "lightbox-fade-in 0.5s ease-out 0.2s both" }}
+                className="w-full flex justify-between items-center px-1 mt-0 transition-opacity"
+                style={{
+                  maxWidth: "90vw",
+                  opacity: imageLoaded ? 1 : 0,
+                  transitionDuration: `${IMAGE_FADE_DURATION}ms`,
+                }}
               >
-                {alt}
+                {/* Caption */}
+                <div className="py-2 text-white/90 text-sm">
+                  {alt || ""}
+                </div>
+
+                {/* Close button - Lightbox2 style */}
+                <button
+                  onClick={handleClose}
+                  className="py-2 px-2 text-white/60 hover:text-white transition-colors text-sm uppercase tracking-wider"
+                  title="Close (Esc)"
+                >
+                  Close
+                </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
