@@ -1,0 +1,41 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY Comments.sln .
+COPY src/Comments.Domain/Comments.Domain.csproj src/Comments.Domain/
+COPY src/Comments.Application/Comments.Application.csproj src/Comments.Application/
+COPY src/Comments.Infrastructure/Comments.Infrastructure.csproj src/Comments.Infrastructure/
+COPY src/Comments.API/Comments.API.csproj src/Comments.API/
+COPY Directory.Build.props .
+
+# Restore dependencies
+RUN dotnet restore src/Comments.API/Comments.API.csproj
+
+# Copy source code
+COPY src/ src/
+
+# Build and publish
+WORKDIR /src/src/Comments.API
+RUN dotnet publish -c Release -o /app/publish
+
+# Runtime image (noble = Ubuntu 24.04, has FreeType with BDF support for SkiaSharp on ARM64)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble AS runtime
+WORKDIR /app
+
+# Install SkiaSharp native dependencies
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libfreetype6 \
+    uuid-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && ldconfig
+
+# Create uploads directory
+RUN mkdir -p /app/uploads
+
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Comments.API.dll"]
