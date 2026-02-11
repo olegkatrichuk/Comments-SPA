@@ -85,9 +85,10 @@ export default function CommentCard({ comment, depth = 0 }: CommentCardProps) {
                   href={comment.homePage}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-primary-500 hover:text-primary-600 hover:underline"
+                  className="text-xs text-primary-600 hover:text-primary-700 hover:underline font-medium"
+                  title={comment.homePage}
                 >
-                  [website]
+                  {comment.homePage}
                 </a>
               )}
               <span className="text-xs text-gray-400">{formattedDate}</span>
@@ -110,7 +111,7 @@ export default function CommentCard({ comment, depth = 0 }: CommentCardProps) {
                     <img
                       src={comment.attachment.url}
                       alt={comment.attachment.fileName}
-                      className="w-32 h-32 object-cover rounded-md border border-gray-200 group-hover:border-primary-300 transition-colors"
+                      className="w-32 h-32 object-cover rounded-md border-2 border-gray-200 group-hover:border-red-500 group-hover:border-[3px] transition-all"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-md transition-colors flex items-center justify-center">
                       <svg
