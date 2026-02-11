@@ -17,7 +17,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // Register MediatR handlers from Infrastructure (e.g. CommentCreatedEventHandler)
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssemblyContaining<Comments.Infrastructure.DependencyInjection>());
+    cfg.RegisterServicesFromAssembly(typeof(Comments.Infrastructure.Messaging.Handlers.CommentCreatedEventHandler).Assembly));
 
 // Controllers + Swagger
 builder.Services.AddControllers();
