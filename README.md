@@ -1,104 +1,104 @@
 # Comments SPA
 
-SPA-приложение для комментариев с каскадной системой ответов, real-time обновлениями и полнотекстовым поиском. Уровень реализации: **Middle+** (архитектура рассчитана на 1M сообщений, 100K пользователей/24ч).
+A single-page application for comments with a cascading reply system, real-time updates, and full-text search. Implementation level: **Middle+** (architecture designed for 1M messages, 100K users/24h).
 
-Архитектура вдохновлена [Microsoft eShop](https://github.com/dotnet/eShop) — Clean Architecture, CQRS, Domain Events.
+Architecture inspired by [Microsoft eShop](https://github.com/dotnet/eShop) — Clean Architecture, CQRS, Domain Events.
 
-## Стек технологий
+## Tech Stack
 
-| Компонент | Технология |
+| Component | Technology |
 |-----------|-----------|
 | Backend | .NET 9, ASP.NET Core Web API |
 | ORM | Entity Framework Core 9 |
-| Frontend | Next.js 15 (App Router, TypeScript, Tailwind CSS) |
-| База данных | PostgreSQL 17 |
-| Кэш | Redis 7 |
-| Брокер сообщений | RabbitMQ 4 (через MassTransit) |
-| Поиск | Elasticsearch 8 |
+| Frontend | Next.js 16 (App Router, TypeScript, Tailwind CSS) |
+| Database | PostgreSQL 17 |
+| Cache | Redis 7 |
+| Message Broker | RabbitMQ 4 (via MassTransit) |
+| Search | Elasticsearch 8 |
 | Real-time | SignalR (Redis backplane) |
 | GraphQL | Hot Chocolate 14 |
-| CAPTCHA | Кастомная (SkiaSharp) |
-| Контейнеризация | Docker Compose |
-| Нагрузочные тесты | NBomber |
+| CAPTCHA | Custom (SkiaSharp) |
+| Containerization | Docker Compose |
+| Load Tests | NBomber |
 
-## Структура проекта
+## Project Structure
 
 ```
 ├── src/
-│   ├── Comments.Domain/              # Сущности, Value Objects, Domain Events, интерфейсы
-│   ├── Comments.Application/         # CQRS (команды/запросы), DTO, валидаторы, MediatR
+│   ├── Comments.Domain/              # Entities, Value Objects, Domain Events, interfaces
+│   ├── Comments.Application/         # CQRS (commands/queries), DTOs, validators, MediatR
 │   ├── Comments.Infrastructure/      # EF Core, Redis, RabbitMQ, Elasticsearch, SignalR
 │   ├── Comments.API/                 # REST API, GraphQL, SignalR Hub, Middleware
 │   └── Comments.WebApp/             # Next.js frontend
 ├── tests/
 │   ├── Comments.UnitTests/
 │   ├── Comments.IntegrationTests/
-│   └── Comments.LoadTests/          # NBomber нагрузочные сценарии
+│   └── Comments.LoadTests/          # NBomber load test scenarios
 ├── docker/
 │   └── docker-compose.yml
 ├── Dockerfile.api
 └── Dockerfile.web
 ```
 
-## Функциональность
+## Features
 
-### Комментарии
-- Создание комментариев с полями: UserName, Email, HomePage (опционально), Text
-- Каскадная (древовидная) система ответов с неограниченной вложенностью
-- Пагинация по 25 комментариев на странице
-- Сортировка по UserName, Email, дате создания (ASC/DESC)
-- Порядок по умолчанию: LIFO (новые сверху)
+### Comments
+- Create comments with fields: UserName, Email, HomePage (optional), Text
+- Cascading (tree-based) reply system with unlimited nesting
+- Pagination with 25 comments per page
+- Sorting by UserName, Email, creation date (ASC/DESC)
+- Default order: LIFO (newest first)
 
-### Безопасность
-- CAPTCHA — кастомная генерация изображений через SkiaSharp, хранение ответов в Redis с TTL
-- XSS-защита — HTML-санитизация (Ganss.XSS), разрешены только теги: `<a>`, `<code>`, `<i>`, `<strong>`
-- Валидация закрытия XHTML-тегов
-- Rate Limiting — 10 запросов/мин на IP для POST-эндпоинтов
-- Клиентская (Zod) и серверная (FluentValidation) валидация
+### Security
+- CAPTCHA — custom image generation via SkiaSharp, answers stored in Redis with TTL
+- XSS protection — HTML sanitization (Ganss.XSS), only allowed tags: `<a>`, `<code>`, `<i>`, `<strong>`
+- XHTML tag closure validation
+- Rate Limiting — 10 requests/min per IP for POST endpoints
+- Client-side (Zod) and server-side (FluentValidation) validation
 
-### Файлы
-- Загрузка изображений (JPG, GIF, PNG) — автоматическое уменьшение до 320x240 через SkiaSharp
-- Загрузка текстовых файлов (TXT, макс. 100KB)
-- Drag & drop загрузка
-- Lightbox превью с анимациями
+### Files
+- Image upload (JPG, GIF, PNG) — automatic resizing to 320x240 via SkiaSharp
+- Text file upload (TXT, max 100KB)
+- Drag & drop upload
+- Lightbox preview with animations
 
-### HTML-тулбар
-- Кнопки вставки тегов `[i]`, `[strong]`, `[code]`, `[a]` вокруг выделенного текста
-- AJAX-превью комментария без перезагрузки страницы
+### HTML Toolbar
+- Tag insertion buttons `[i]`, `[strong]`, `[code]`, `[a]` wrapping selected text
+- AJAX comment preview without page reload
 
 ### Real-time
-- SignalR WebSocket — новые комментарии появляются у всех пользователей без перезагрузки
-- Redis backplane для горизонтального масштабирования
+- SignalR WebSocket — new comments appear for all users without page reload
+- Redis backplane for horizontal scaling
 
-### Поиск
-- Полнотекстовый поиск через Elasticsearch
-- Поиск по UserName, Email и тексту комментария
+### Search
+- Full-text search via Elasticsearch
+- Search by UserName, Email, and comment text
 
 ### GraphQL
-- Queries: получение списка комментариев, комментарий по ID, поиск
-- Mutations: создание комментария
-- Subscriptions: подписка на новые комментарии
+- Queries: get comment list, comment by ID, search
+- Mutations: create comment
+- Subscriptions: subscribe to new comments
 
-## Запуск
+## Getting Started
 
-### Docker Compose (рекомендуется)
+### Docker Compose (recommended)
 
 ```bash
 cd docker
 docker compose up --build
 ```
 
-Сервисы:
+Services:
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:5000
-- **Swagger UI**: http://localhost:5000/swagger (только в Development)
+- **Swagger UI**: http://localhost:5000/swagger (Development only)
 - **GraphQL Playground**: http://localhost:5000/graphql
 - **RabbitMQ Management**: http://localhost:15672 (guest/guest)
 - **Health Check**: http://localhost:5000/health
 
-### Локальная разработка
+### Local Development
 
-Требования: .NET 9 SDK, Node.js 20+, PostgreSQL, Redis, RabbitMQ, Elasticsearch.
+Requirements: .NET 9 SDK, Node.js 20+, PostgreSQL, Redis, RabbitMQ, Elasticsearch.
 
 **Backend:**
 ```bash
@@ -119,21 +119,21 @@ npm run dev
 
 ### REST
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/comments` | Список комментариев (пагинация + сортировка) |
-| GET | `/api/comments/{id}` | Комментарий по ID с вложенными ответами |
-| POST | `/api/comments` | Создание комментария (multipart/form-data) |
-| GET | `/api/captcha` | Генерация CAPTCHA (image + key) |
-| GET | `/api/files/{id}` | Получение вложенного файла |
-| GET | `/api/search` | Полнотекстовый поиск комментариев |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/comments` | List comments (pagination + sorting) |
+| GET | `/api/comments/{id}` | Comment by ID with nested replies |
+| POST | `/api/comments` | Create comment (multipart/form-data) |
+| GET | `/api/captcha` | Generate CAPTCHA (image + key) |
+| GET | `/api/files/{id}` | Get attached file |
+| GET | `/api/search` | Full-text comment search |
 
 ### GraphQL
 
 Endpoint: `/graphql`
 
 ```graphql
-# Запрос комментариев
+# Query comments
 query {
   comments(page: 1, pageSize: 25, sortField: CREATED_AT, sortDirection: DESCENDING) {
     items { id userName email text createdAt replies { id text } }
@@ -141,7 +141,7 @@ query {
   }
 }
 
-# Подписка на новые комментарии
+# Subscribe to new comments
 subscription {
   onCommentCreated { id userName text createdAt }
 }
@@ -151,57 +151,57 @@ subscription {
 
 Endpoint: `/hubs/comments`
 
-События:
-- `ReceiveComment` — новый комментарий создан
+Events:
+- `ReceiveComment` — new comment created
 
-## Схема базы данных
+## Database Schema
 
-### Таблица `comments`
+### Table `comments`
 
-| Колонка | Тип | Описание |
-|---------|-----|----------|
-| id | UUID (v7) | Первичный ключ (time-sortable) |
-| user_name | VARCHAR(50) | Имя пользователя (буквы + цифры) |
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID (v7) | Primary key (time-sortable) |
+| user_name | VARCHAR(50) | Username (letters + digits) |
 | email | VARCHAR(254) | Email |
-| home_page | VARCHAR(2048) | URL домашней страницы (nullable) |
-| text | TEXT | Текст комментария (макс. 8000) |
-| created_at | TIMESTAMPTZ | Дата создания |
-| parent_comment_id | UUID | FK на родительский комментарий (nullable) |
+| home_page | VARCHAR(2048) | Home page URL (nullable) |
+| text | TEXT | Comment text (max 8000) |
+| created_at | TIMESTAMPTZ | Creation date |
+| parent_comment_id | UUID | FK to parent comment (nullable) |
 
-Индексы: created_at DESC, user_name, email, parent_comment_id, partial index на top-level комментарии.
+Indexes: created_at DESC, user_name, email, parent_comment_id, partial index on top-level comments.
 
-### Таблица `attachments`
+### Table `attachments`
 
-| Колонка | Тип | Описание |
-|---------|-----|----------|
-| id | UUID | Первичный ключ |
-| file_name | VARCHAR(255) | Оригинальное имя файла |
-| stored_file_name | VARCHAR(255) | Имя файла в хранилище |
-| content_type | VARCHAR(100) | MIME-тип |
-| file_size_bytes | BIGINT | Размер файла |
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| file_name | VARCHAR(255) | Original file name |
+| stored_file_name | VARCHAR(255) | Storage file name |
+| content_type | VARCHAR(100) | MIME type |
+| file_size_bytes | BIGINT | File size |
 | type | INTEGER | 0 = Image, 1 = TextFile |
-| comment_id | UUID | FK на комментарий (CASCADE) |
+| comment_id | UUID | FK to comment (CASCADE) |
 
-## Архитектурные решения для высокой нагрузки
+## Architectural Decisions for High Load
 
-- **UUIDv7** — time-sortable первичные ключи, отсутствие contention на sequence
-- **Partial index** — фильтрованный индекс на top-level комментарии (`WHERE parent_comment_id IS NULL`)
-- **Redis cache-aside** — кэширование пагинированных запросов (TTL 5 мин), инвалидация при записи
-- **Async processing** — индексация в Elasticsearch и SignalR broadcast через RabbitMQ consumer (вне request path)
-- **AsSplitQuery()** — предотвращение cartesian explosion при загрузке вложенных комментариев
-- **Rate Limiting** — Fixed Window: 10 комментариев/мин на IP
-- **Redis backplane** — горизонтальное масштабирование SignalR
+- **UUIDv7** — time-sortable primary keys, no sequence contention
+- **Partial index** — filtered index on top-level comments (`WHERE parent_comment_id IS NULL`)
+- **Redis cache-aside** — caching paginated queries (TTL 5 min), invalidation on write
+- **Async processing** — Elasticsearch indexing and SignalR broadcast via RabbitMQ consumer (off the request path)
+- **AsSplitQuery()** — preventing cartesian explosion when loading nested comments
+- **Rate Limiting** — Fixed Window: 10 comments/min per IP
+- **Redis backplane** — horizontal scaling for SignalR
 
-## Нагрузочное тестирование
+## Load Testing
 
-NBomber сценарии (3 минуты каждый):
-- `read_comments` — 100 запросов/сек, чтение с пагинацией
-- `create_comments` — 50 запросов/сек, создание комментариев
-- `search_comments` — 80 запросов/сек, полнотекстовый поиск
+NBomber scenarios (3 minutes each):
+- `read_comments` — 100 req/sec, paginated reads
+- `create_comments` — 50 req/sec, comment creation
+- `search_comments` — 80 req/sec, full-text search
 
 ```bash
 cd tests/Comments.LoadTests
 dotnet run -- http://localhost:5000
 ```
 
-Отчет сохраняется в `reports/load_test_report.html`.
+Report saved to `reports/load_test_report.html`.
